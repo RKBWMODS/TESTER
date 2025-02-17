@@ -28,11 +28,13 @@
                 <th>IP PENYERANG</th>
                 <th>DATE TIME</th>
                 <th>SPEED (req/s)</th>
+                <th>LINK YANG DISERANG</th> <!-- Kolom untuk menampilkan link -->
             </tr>
             <tbody id="attackData"></tbody>
         </table>
         <canvas id="attackChart"></canvas>
         <button onclick="resetData()">RESET DATA</button>
+        <p id="randomLink"></p> <!-- Menampilkan link acak -->
     </div>
 
     <script>
@@ -53,11 +55,12 @@
         async function simulateAttack() {
             const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
             const speed = (Math.random() * (500 - 10) + 10).toFixed(2);
+            const link = document.getElementById("randomLink").textContent.split(': ')[1];  // Mendapatkan link yang sedang diserang
             
             await fetch('/api/attack', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ip, speed })
+                body: JSON.stringify({ ip, speed, link })
             });
 
             fetchAttacks();
@@ -72,6 +75,7 @@
                     <td>${data.ip}</td>
                     <td>${new Date(data.time).toLocaleTimeString()}</td>
                     <td>${data.speed}</td>
+                    <td>${data.link}</td> <!-- Menampilkan link yang diserang -->
                 </tr>`;
                 tableBody.innerHTML += row;
             });
@@ -101,10 +105,21 @@
         function resetData() {
             attackData = [];
             document.getElementById("attackData").innerHTML = "";
+            
+            // Menampilkan link acak di bawah tombol reset
+            const randomLink = generateRandomLink();
+            document.getElementById("randomLink").textContent = `Link untuk diserang: ${randomLink}`;
+
             if (attackChart) {
                 attackChart.destroy();
                 attackChart = null;
             }
+        }
+
+        function generateRandomLink() {
+            const domains = ['example.com', 'testsite.org', 'attacktarget.net', 'targetdomain.io'];
+            const randomIndex = Math.floor(Math.random() * domains.length);
+            return `https://${domains[randomIndex]}/`;
         }
 
         setInterval(simulateAttack, 1000);

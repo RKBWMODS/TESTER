@@ -4,39 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DIZ FLYZE WEBSITE TESTER</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #0d1117; color: white; margin: 0; padding: 0; }
-        h1 { margin-top: 20px; font-size: 28px; }
-        .container { width: 90%; max-width: 800px; margin: auto; padding: 20px; background-color: #161b22; border-radius: 10px; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table, th, td { border: 1px solid #30363d; }
-        th, td { padding: 10px; text-align: center; }
-        th { background-color: #21262d; }
-        button { margin-top: 20px; padding: 10px 20px; background-color: #ff0000; color: white; border: none; font-size: 18px; cursor: pointer; border-radius: 5px; }
-        button:hover { background-color: #cc0000; }
-        canvas { margin-top: 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #1c1c1c;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #e50914;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .attack-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+
+        th, td {
+            padding: 15px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+
+        th {
+            background-color: #2c2c2c;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        td {
+            background-color: #222;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .attack-table tr:hover {
+            background-color: #333;
+        }
+
+        button {
+            padding: 15px 30px;
+            background-color: #e50914;
+            color: #fff;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #b30710;
+        }
+
+        .link-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #333;
+            border-radius: 8px;
+        }
+
+        .link-container p {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        .chart-container {
+            margin-top: 40px;
+        }
+
+        canvas {
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
-    <h1>DIZ FLYZE WEBSITE TESTER</h1>
+
     <div class="container">
+        <h1>DIZ FLYZE WEBSITE TESTER</h1>
         <h2>DATA SERANGAN</h2>
-        <table>
-            <tr>
-                <th>REQUESTS</th>
-                <th>IP PENYERANG</th>
-                <th>DATE TIME</th>
-                <th>SPEED (req/s)</th>
-                <th>LINK YANG DISERANG</th> <!-- Kolom untuk menampilkan link -->
-            </tr>
+
+        <table class="attack-table">
+            <thead>
+                <tr>
+                    <th>REQUESTS</th>
+                    <th>IP PENYERANG</th>
+                    <th>DATE TIME</th>
+                    <th>SPEED (req/s)</th>
+                    <th>LINK YANG DISERANG</th>
+                </tr>
+            </thead>
             <tbody id="attackData"></tbody>
         </table>
-        <canvas id="attackChart"></canvas>
-        <button onclick="resetData()">RESET DATA</button>
-        <p id="randomLink"></p> <!-- Menampilkan link acak -->
+
+        <div class="link-container">
+            <button onclick="resetData()">RESET DATA</button>
+            <p id="randomLink">Link untuk diserang akan muncul di sini</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="attackChart"></canvas>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let attackData = [];
         let attackChart;
@@ -75,7 +174,7 @@
                     <td>${data.ip}</td>
                     <td>${new Date(data.time).toLocaleTimeString()}</td>
                     <td>${data.speed}</td>
-                    <td>${data.link}</td> <!-- Menampilkan link yang diserang -->
+                    <td>${data.link}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
@@ -86,8 +185,14 @@
                 const ctx = document.getElementById('attackChart').getContext('2d');
                 attackChart = new Chart(ctx, {
                     type: 'line',
-                    data: { labels: [], datasets: [{ label: 'Speed (req/s)', data: [], borderColor: 'red', fill: false }] },
-                    options: { responsive: true, scales: { x: { display: false }, y: { beginAtZero: true } } }
+                    data: { labels: [], datasets: [{ label: 'Speed (req/s)', data: [], borderColor: '#e50914', fill: false }] },
+                    options: {
+                        responsive: true,
+                        scales: { x: { display: false }, y: { beginAtZero: true } },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
                 });
             }
 

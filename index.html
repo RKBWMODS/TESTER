@@ -6,58 +6,16 @@
     <title>DIZ FLYZE WEBSITE TESTER</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #0d1117;
-            color: white;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            margin-top: 20px;
-            font-size: 28px;
-        }
-        .container {
-            width: 90%;
-            max-width: 800px;
-            margin: auto;
-            padding: 20px;
-            background-color: #161b22;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #30363d;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #21262d;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #ff0000;
-            color: white;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #cc0000;
-        }
-        canvas {
-            margin-top: 20px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #0d1117; color: white; margin: 0; padding: 0; }
+        h1 { margin-top: 20px; font-size: 28px; }
+        .container { width: 90%; max-width: 800px; margin: auto; padding: 20px; background-color: #161b22; border-radius: 10px; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #30363d; }
+        th, td { padding: 10px; text-align: center; }
+        th { background-color: #21262d; }
+        button { margin-top: 20px; padding: 10px 20px; background-color: #ff0000; color: white; border: none; font-size: 18px; cursor: pointer; border-radius: 5px; }
+        button:hover { background-color: #cc0000; }
+        canvas { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -74,84 +32,83 @@
             <tbody id="attackData"></tbody>
         </table>
         <canvas id="attackChart"></canvas>
-        <button onclick="simulateAttack()">SIMULASI SERANGAN</button>
+        <button onclick="resetData()">RESET DATA</button>
     </div>
 
     <script>
-        const API_URL = "https://diztesterddos.vercel.app/"; // Ganti dengan URL Vercel kamu
+        let attackData = [];
+        let attackChart;
 
         async function fetchAttacks() {
             try {
-                const response = await fetch(`${API_URL}/attacks`);
-                const data = await response.json();
-                updateTable(data);
-                updateChart(data);
+                const response = await fetch('/api/attacks');
+                attackData = await response.json();
+                updateTable();
+                updateChart();
             } catch (error) {
-                console.error("Gagal mengambil data serangan:", error);
+                console.error('Gagal mengambil data:', error);
             }
         }
 
-        async function sendAttack(ip, speed) {
-            try {
-                await fetch(`${API_URL}/attack`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ip, speed }),
-                });
-            } catch (error) {
-                console.error("Gagal mengirim serangan:", error);
-            }
+        async function simulateAttack() {
+            const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+            const speed = (Math.random() * (500 - 10) + 10).toFixed(2);
+            
+            await fetch('/api/attack', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip, speed })
+            });
+
+            fetchAttacks();
         }
 
-        function updateTable(data) {
+        function updateTable() {
             let tableBody = document.getElementById("attackData");
             tableBody.innerHTML = "";
-            data.slice(-10).forEach(attack => {
+            attackData.slice(-10).forEach(data => {
                 let row = `<tr>
-                    <td>${attack.requests}</td>
-                    <td>${attack.ip}</td>
-                    <td>${attack.time}</td>
-                    <td>${attack.speed}</td>
+                    <td>${attackData.indexOf(data) + 1}</td>
+                    <td>${data.ip}</td>
+                    <td>${new Date(data.time).toLocaleTimeString()}</td>
+                    <td>${data.speed}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
         }
 
-        function updateChart(data) {
-            const ctx = document.getElementById('attackChart').getContext('2d');
-            if (window.attackChart) {
-                window.attackChart.destroy();
+        function updateChart() {
+            if (!attackChart) {
+                const ctx = document.getElementById('attackChart').getContext('2d');
+                attackChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: [], datasets: [{ label: 'Speed (req/s)', data: [], borderColor: 'red', fill: false }] },
+                    options: { responsive: true, scales: { x: { display: false }, y: { beginAtZero: true } } }
+                });
             }
 
-            window.attackChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map((_, i) => i + 1),
-                    datasets: [{
-                        label: 'Speed (req/s)',
-                        data: data.map(attack => parseFloat(attack.speed)),
-                        borderColor: 'red',
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: { display: false },
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
+            attackChart.data.labels.push(attackData.length);
+            attackChart.data.datasets[0].data.push(parseFloat(attackData[attackData.length - 1]?.speed || 0));
+
+            if (attackChart.data.labels.length > 10) {
+                attackChart.data.labels.shift();
+                attackChart.data.datasets[0].data.shift();
+            }
+
+            attackChart.update();
         }
 
-        function simulateAttack() {
-            const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-            const speed = (Math.random() * (500 - 10) + 10).toFixed(2);
-            sendAttack(ip, speed);
+        function resetData() {
+            attackData = [];
+            document.getElementById("attackData").innerHTML = "";
+            if (attackChart) {
+                attackChart.destroy();
+                attackChart = null;
+            }
         }
 
+        setInterval(simulateAttack, 1000);
         setInterval(fetchAttacks, 3000);
-        fetchAttacks();
     </script>
 </body>
 </html>
